@@ -32,9 +32,11 @@ def withinOneYearV2(date):
 def findHourPay(source):
 	data=r.findall("Lounge1(\d{1,4}\W\d{2})",source)
 	return [float(n) for n in data]
+	
 def findHolidayPay(source):
 	data=r.findall("Holiday Lounge\d(\d{1,4}\W\d{2})",source)
 	return [float(n) for n in data]
+	
 def totalGrossPay(hourPay,grossPay):
 	return sum(hourPay,grossPay)
 	
@@ -95,20 +97,20 @@ def loadAllFiles():
 			arrayOfFiles.append(l)
 	return arrayOfFiles
 
-arrayOfFiles=loadAllFiles()
-howManyPayslips=len(arrayOfFiles)
 
-payslipsArray=[]
-for n in arrayOfFiles:
-	m=open("Payslips/"+str(n),"rb")
-	pdf=PdfFileReader(m)
-	pdf.decrypt(password)
-	pageObj = pdf.getPage(0)
-	page_content = pageObj.extractText()
-	correctDate=withinOneYear(page_content)
-	if correctDate:
-		payslipsArray.append(processData(page_content,n,correctDate))
-sortedPayArr=sorted(payslipsArray,key=lambda x: x.date)
+def filtratePayslips(listOfPayslips):
+	payslipsArray=[]
+	for n in listOfPayslips:
+		m=open("Payslips/"+str(n),"rb")
+		pdf=PdfFileReader(m)
+		pdf.decrypt(password)
+		pageObj = pdf.getPage(0)
+		page_content = pageObj.extractText()
+		correctDate=withinOneYear(page_content)
+		if correctDate:
+			payslipsArray.append(processData(page_content,n,correctDate))
+	return sorted(payslipsArray,key=lambda x: x.date)
+	
 
 class Total():
 	def __init__(self,Tax,NI,Paid,Pension,Holiday,Gross):
@@ -119,17 +121,24 @@ class Total():
 		self.Holiday=Holiday
 		self.Gross=Gross
 
-total=Total(0,0,0,0,0,0)
-total.Tax=sum([f.tax for f in sortedPayArr])
-total.NI=sum([f.NI for f in payslipsArray])
 
-payslipValues=[f.grossPay for f in sortedPayArr]
+
+
+loadedFiles=loadAllFiles()
+howManyPayslips=len(loadedFiles)
+payslips=filtratePayslips(loadedFiles)
+
+total=Total(0,0,0,0,0,0)
+total.Tax=sum([f.tax for f in payslips])
+total.NI=sum([f.NI for f in payslips])
+
+payslipValues=[f.grossPay for f in payslips]
 totalPaid=sum(payslipValues)
-totalPensionPaid=sum([f.pension for f in payslipsArray])
-totalHoliday=sum([f.weekOne.holiday + f.weekTwo.holiday for f in payslipsArray])
-payslipDates=[f.date.date() for f in payslipsArray]
+totalPensionPaid=sum([f.pension for f in payslips])
+totalHoliday=sum([f.weekOne.holiday + f.weekTwo.holiday for f in payslips])
+payslipDates=[f.date.date() for f in payslips]
 totalGrossPay=totalPaid+total.NI+totalPensionPaid+total.Tax
-plt.plot([f.tax for f in sortedPayArr])
+plt.plot([f.tax for f in payslips])
 plt.plot(payslipValues)
 plt.axhline(sum(payslipValues)/
 len(payslipValues))
@@ -142,6 +151,4 @@ plt.show()
 finish=time.time()
 print(finish-start)
 o=sorted(payslipsArray,key=lambda nunu : nunu.date)
-	
-	
 	
