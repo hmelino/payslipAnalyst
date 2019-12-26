@@ -85,16 +85,17 @@ def processData(page_content,n,correctDate):
 	return biweeklyPayslip
 	
 
+def loadAllFiles():
+	directory = os.fsencode("Payslips/")
+	arrayOfFiles=[]
+	for file in os.listdir(directory):
+		filename = os.fsdecode(file)
+		if filename.endswith(".pdf"):
+			l=os.path.join(filename)
+			arrayOfFiles.append(l)
+	return arrayOfFiles
 
-directory = os.fsencode("Payslips/")
-arrayOfFiles=[]
-totaltotalPay=0
-for file in os.listdir(directory):
-     filename = os.fsdecode(file)
-     if filename.endswith(".pdf") or filename.endswith(".2nq"):
-       l=os.path.join(filename)
-       arrayOfFiles.append(l)
-
+arrayOfFiles=loadAllFiles()
 howManyPayslips=len(arrayOfFiles)
 
 payslipsArray=[]
